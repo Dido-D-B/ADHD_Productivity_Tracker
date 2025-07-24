@@ -1,6 +1,3 @@
-
-
-
 # ADHD Productivity Tracker
 
 This is a privacy-respecting productivity tracking app built with Streamlit and Supabase. The goal is to help individuals with ADHD better understand their productivity patterns and improve focus over time.
@@ -8,7 +5,9 @@ This is a privacy-respecting productivity tracking app built with Streamlit and 
 ## Features
 
 - Secure login system using `streamlit-authenticator` with hashed passwords
-- Personal dashboard for visualizing recent productivity logs
+- Personalized dashboard showing only the logged-in user's entries
+- Each user’s data is securely stored and isolated
+- Ready for future ML model training per user
 - Simple input form to log daily focus and productivity level
 - Cloud-hosted PostgreSQL database via Supabase
 - Secrets and credentials safely managed via `.streamlit/secrets.toml` (excluded from GitHub)
@@ -65,7 +64,7 @@ streamlit run app.py
 ## Future Plans
 
 - Add optional tags and notes to each log entry
-- Train ML models after enough data is collected to find productivity trends
+- Train personalized ML models once each user has collected enough data
 - Allow export of user data
 - Add dark mode and improved UI/UX
 
