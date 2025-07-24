@@ -7,13 +7,16 @@ from datetime import datetime
 import pandas as pd
 import bcrypt
 from supabase import create_client, Client
+from dotenv import load_dotenv
+import os
+load_dotenv()
 
 # Set page title and icon
 st.set_page_config(page_title="ADHD Tracker", page_icon="icon.ico")
 
 # Connect to Supabase
-SUPABASE_URL = st.secrets["SUPABASE_URL"]
-SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # Registration section
