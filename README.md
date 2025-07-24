@@ -1,3 +1,5 @@
+<img width="1764" height="1586" alt="image" src="https://github.com/user-attachments/assets/b51ff024-f0f5-4bd9-add7-f9895b17aa1b" />
+
 # ADHD Productivity Tracker
 
 This is a privacy-respecting productivity tracking app built with Streamlit and Supabase. The goal is to help individuals with ADHD better understand their productivity patterns and improve focus over time.
