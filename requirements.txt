@@ -7,3 +7,4 @@ sqlalchemy
 psycopg2-binary
 python-dotenv
 supabase==1.0.3
+matplotlib
