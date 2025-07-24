@@ -6,3 +6,4 @@ streamlit-authenticator==0.3.2
 sqlalchemy
 psycopg2-binary
 python-dotenv
+supabase==1.0.3
