@@ -42,33 +42,30 @@ with st.expander("Register New User"):
 # Load credentials from Supabase
 response = supabase.table("users").select("username", "name", "password").execute()
 users = response.data if response.data else []
-credentials = {
-    "usernames": {
-        user["username"]: {
-            "name": user["name"],
-            "password": user["password"]
-        }
-        for user in users
-    }
-}
-cookie = {"name": "adhd_tracker_cookie", "key": "random_cookie_key", "expiry_days": 30}
 
-authenticator = stauth.Authenticate(
-    credentials,
-    cookie["name"],
-    cookie["key"],
-    cookie["expiry_days"]
-)
+st.markdown("## Login")
+login_username = st.text_input("Username", key="login_user")
+login_password = st.text_input("Password", type="password", key="login_pass")
 
-name, authentication_status, username = authenticator.login(fields={'Form name': 'Login'})
+if st.button("Login"):
+    user = next((u for u in users if u["username"] == login_username), None)
+    if user and bcrypt.checkpw(login_password.encode(), user["password"].encode()):
+        st.success(f"Welcome back, {user['name']}!")
+        st.session_state["username"] = login_username
+        st.session_state["name"] = user["name"]
+    else:
+        st.error("Username or password is incorrect.")
 
-if authentication_status:
-    st.sidebar.success(f"Welcome, {name}!")
-    authenticator.logout('Logout', 'sidebar')
+if "username" in st.session_state:
+    st.sidebar.success(f"Welcome, {st.session_state['name']}!")
+    if st.sidebar.button("Logout"):
+        del st.session_state["username"]
+        del st.session_state["name"]
+        st.experimental_rerun()
 
     st.title("ADHD Productivity Tracker")
 
-    if not username:
+    if "username" not in st.session_state:
         st.warning("No username detected. Please try logging in again.")
         st.stop()
 
@@ -91,7 +88,7 @@ if authentication_status:
 
             try:
                 response = supabase.table("logs").insert({
-                    "username": username,
+                    "username": st.session_state["username"],
                     "date": date.strftime("%Y-%m-%d"),
                     "time_block": time_block,
                     "activity": activity,
@@ -112,13 +109,8 @@ if authentication_status:
     # Show user previous logs
     st.markdown("### Your Recent Entries")
     try:
-        response = supabase.table("logs").select("*").eq("username", username).order("timestamp", desc=True).limit(10).execute()
+        response = supabase.table("logs").select("*").eq("username", st.session_state["username"]).order("timestamp", desc=True).limit(10).execute()
         df = pd.DataFrame(response.data)
         st.dataframe(df)
     except Exception as e:
         st.error(f"Failed to fetch entries: {e}")
-
-elif authentication_status is False:
-    st.error("Username or password is incorrect.")
-elif authentication_status is None:
-    st.warning("Please enter your username and password.")
