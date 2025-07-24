@@ -1,6 +1,5 @@
 import streamlit as st
 import copy
-import streamlit_authenticator as stauth
 import yaml
 from yaml.loader import SafeLoader
 from datetime import datetime
