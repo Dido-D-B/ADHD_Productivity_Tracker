@@ -10,59 +10,54 @@ from dotenv import load_dotenv
 import os
 from supabase import create_client, Client
 
-# Safely load credentials from secrets into editable dictionaries
-credentials = {
-    "usernames": {
-        user: {
-            "name": st.secrets["credentials"]["usernames"][user]["name"],
-            "password": st.secrets["credentials"]["usernames"][user]["password"]
-        }
-        for user in st.secrets["credentials"]["usernames"]
-    }
-}
-
-cookie = {
-    "name": st.secrets["cookie"]["name"],
-    "key": st.secrets["cookie"]["key"],
-    "expiry_days": st.secrets["cookie"]["expiry_days"]
-}
-
-preauthorized = st.secrets.get("preauthorized", {})
-
-config = {
-    "credentials": credentials,
-    "cookie": cookie,
-    "preauthorized": preauthorized,
-}
-
 # Set page title and icon
 st.set_page_config(page_title="ADHD Tracker", page_icon="icon.ico")
 
-# WARNING: Registration will not persist without config.yaml.
-# When using st.secrets for configuration, user registration is best handled in a separate interface.
+# Connect to Supabase
+load_dotenv()
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+# Registration section
 with st.expander("Register New User"):
     new_name = st.text_input("Full Name")
     new_username = st.text_input("Username")
     new_password = st.text_input("Password", type="password")
     if st.button("Register"):
-        if new_username in config['credentials']['usernames']:
+        user_exists = supabase.table("users").select("username").eq("username", new_username).execute()
+        if user_exists.data:
             st.warning("Username already exists.")
         elif not new_name or not new_password:
             st.warning("Please fill out all fields.")
         else:
             hashed_pw = bcrypt.hashpw(new_password.encode(), bcrypt.gensalt()).decode()
-            config['credentials']['usernames'][new_username] = {
-                'name': new_name,
-                'password': hashed_pw
-            }
+            supabase.table("users").insert({
+                "username": new_username,
+                "name": new_name,
+                "password": hashed_pw
+            }).execute()
             st.success("User registered successfully! You can now log in.")
 
-# Authentication
+# Load credentials from Supabase
+response = supabase.table("users").select("username", "name", "password").execute()
+users = response.data if response.data else []
+credentials = {
+    "usernames": {
+        user["username"]: {
+            "name": user["name"],
+            "password": user["password"]
+        }
+        for user in users
+    }
+}
+cookie = {"name": "adhd_tracker_cookie", "key": "random_cookie_key", "expiry_days": 30}
+
 authenticator = stauth.Authenticate(
-    config['credentials'],
-    config['cookie']['name'],
-    config['cookie']['key'],
-    config['cookie']['expiry_days']
+    credentials,
+    cookie["name"],
+    cookie["key"],
+    cookie["expiry_days"]
 )
 
 name, authentication_status, username = authenticator.login(fields={'Form name': 'Login'})
@@ -77,13 +72,6 @@ if authentication_status:
         st.warning("No username detected. Please try logging in again.")
         st.stop()
 
-    # Connect to Supabase
-    load_dotenv()
-
-    SUPABASE_URL = os.getenv("SUPABASE_URL")
-    SUPABASE_KEY = os.getenv("SUPABASE_KEY")
-
-    supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
     st.success("Connected to Supabase database.")
 
     with st.container():
